@@ -1,0 +1,105 @@
+
+Assignment program: Add 20 numbers in an array using 4 cores
+C:\>cd  /opt/openmpi/bin
+C:\opt/openmpi/bin> edit  program_name.c
+Example : 
+               C:\opt/openmpi/bin> edit  add.c
+****************************************************************************
+#include <stdio.h>
+#include "mpi.h"
+int main(int argc, char* argv[])
+{
+int rank, size;
+int num[20]; //N=20, n=4
+MPI_Init(&argc, &argv);
+MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+MPI_Comm_size(MPI_COMM_WORLD, &size);
+for(int i=0;i<20;i++)
+num[i]=i+1;
+if(rank == 0){    // (Determine  the label of  calling process  )( i.e. Label all the process)
+int s[4];         //•  Declares an array s of size 4 to store partial sums from other processes.
+                   // •  Prints a message indicating the distribution is happening at rank 0.
+printf("Distribution at rank %d \n", rank);
+for(int i=1;i<4;i++)
+MPI_Send(&num[i*5], 5, MPI_INT, i, 1, MPI_COMM_WORLD); //N/n i.e. 20/4=5
+int sum=0, local_sum=0;
+for(int i=0;i<5;i++)
+{
+local_sum=local_sum+num[i];  //•  Local Sum Calculation:
+•	Calculates the local sum of the first 5 elements of the num array.
+•	This local sum is stored in a variable local_sum.
+
+}
+for(int i=1;i<4;i++)
+{
+MPI_Recv(&s[i], 1, MPI_INT, i, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+}  //•  Partial Sum Reception:
+•	Utilizes MPI_Recv to receive partial sums from other processes.
+•	Stores the received partial sums in the array s. 
+
+printf("local sum at rank %d is %d\n", rank,local_sum);
+sum=local_sum;
+for(int i=1;i<4;i++)
+sum=sum+s[i];
+printf("final sum = %d\n\n",sum);
+} //•  Final Sum Calculation:
+•	Calculates the final sum by summing up the local sum and the received partial sums.
+•	Prints the local sum of the root process and the final sum.
+
+else
+{
+int k[5];  //This loop for root block 
+MPI_Recv(k, 5, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+int local_sum=0;
+for(int i=0;i<5;i++)
+{
+local_sum=local_sum+k[i];
+}
+printf("local sum at rank %d is %d\n", rank, local_sum);
+MPI_Send(&local_sum, 1, MPI_INT, 0, 1, MPI_COMM_WORLD);
+}
+MPI_Finalize();
+return 0;
+}
+Distribution at rank 0
+local sum at rank 1 is 40
+local sum at rank 2 is 65
+local sum at rank 3 is 90
+local sum at rank 0 is 15
+final sum = 210
+/****** students can be asked to take dynamic values for N, n and array ************/
+Run :  Compile the program using
+C:mpicc name of the program
+example : opt/openmpi/bin> mpicc add.c
+12. Execute the program using
+opt/openmpi/bin> mpirun -np N ./a.out
+example : opt/openmpi/bin> mpirun -np 2 ./a.out
+example : opt/openmpi/bin> mpirun -np 3 ./a.out
+example : opt/openmpi/bin> mpirun -np 4 ./a.out
+
+
+1.	Explanation : Initialization: The program starts by including the necessary header files (stdio.h and mpi.h) and defining the main function. It initializes MPI using MPI_Init and retrieves the rank and size of the MPI communicator (MPI_COMM_WORLD).
+2.	Data Initialization: An array num of size 20 is declared to hold integers. Each element of the array is initialized with values from 1 to 20.
+3.	Root Process (Rank 0):
+o	The program checks if the current process has rank 0. If it is the root process (rank 0), it proceeds with distributing data to other processes.
+o	It prints a message indicating the distribution is happening at rank 0.
+o	Using MPI_Send, it sends blocks of 5 integers (num[i*5] to num[i*5 + 4]) to each of the other processes (ranks 1 to 3).
+o	It calculates the local sum of the first 5 elements of the array num.
+o	It receives the local sums computed by other processes using MPI_Recv.
+4.	Non-root Processes (Ranks 1 to 3):
+o	If the process is not the root (rank 0), it receives 5 integers sent by the root process using MPI_Recv.
+o	It calculates the local sum of the received 5 integers.
+o	It sends the local sum back to the root process using MPI_Send.
+5.	Finalization: After all communication is complete, the program finalizes MPI using MPI_Finalize and returns.
+6.	Output:
+o	Each process prints its rank and the local sum it calculated.
+o	The root process also prints the final sum, which is the sum of all local sums calculated by each process.
+Explanation of the data distribution:
+•	The array num holds integers from 1 to 20.
+•	The root process (rank 0) divides this array into 4 equal parts, each containing 5 integers.
+•	These 4 parts are then sent to the other processes (ranks 1 to 3) using MPI_Send.
+•	Each non-root process receives 5 integers from the root process and calculates the local sum of these integers.
+Explanation of the summation process:
+•	After receiving the local sums from all processes, the root process sums up all the local sums to calculate the final sum.
+•	This final sum represents the sum of all integers from 1 to 20, distributed among the processes.
+This program demonstrates a parallel computing example where a large data array is distributed among multiple processes, and each process computes a partial sum. The root process collects these partial sums and computes the final sum.
