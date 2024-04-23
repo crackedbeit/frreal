@@ -1,0 +1,173 @@
+//Program to demonstrate Berkeley clock synchronization algorithm
+import java.io.*;
+import java.util.*;
+
+public class Berkley {
+This section begins with the declaration of the Berkley class.
+java
+Copy code
+float diff(int h, int m, int s, int nh, int nm, int ns){
+    int dh = h - nh;
+    int dm = m - nm;
+    int ds = s - ns;
+    int diff = (dh * 60 * 60) + (dm * 60) + ds;
+    return diff;
+}
+This method diff calculates the time difference between two time instances in seconds. It takes the hours, minutes, and seconds of two different time points as parameters and calculates the difference in seconds.
+java
+Copy code
+float average(float diff[], int n){
+    int sum=0;
+    for(int i=0; i<n; i++)
+    {
+        sum+=diff[i];
+    }
+    float average = (float)sum/(n+1);
+    System.out.println("The average of all time differences is "+average);
+    return average;
+}
+This method average calculates the average of an array of time differences. It takes an array of time differences (diff[]) and its length (n) as parameters, calculates the sum of all time differences, computes the average, and returns it. It also prints out the average time difference.
+java
+Copy code
+void sync(float diff[], int n, int h, int m, int s, int nh[], int nm[], int ns[], float average)
+{
+    for(int i=0;i<n;i++)
+    {
+        diff[i]+=average;
+        int dh=(int)diff[i]/(60*60);
+        diff[i]%=(60*60);
+        int dm=(int)diff[i]/60;
+        diff[i]%=60;
+        int ds=(int)diff[i];
+
+        nh[i]+=dh;   //assign different hours value in “nh”  variable 
+        if(nh[i]>23)
+        {
+            nh[i]%=24;
+        }
+
+        nm[i]+=dm;   //assign different minutes value in “nm”  variable
+        if(nm[i]>59)
+        {
+            nh[i]++;
+            nm[i]%=60;
+        }
+
+        ns[i]+=ds; //assign different second value in “ns”  variable
+        if(ns[i]>59)
+        {
+            nm[i]++;
+            ns[i]%=60;
+        }
+
+        if(ns[i]<0)
+        {
+            nm[i]--;
+            ns[i]+=60;
+        }
+    }
+    h+=(int)(average/(60*60));
+    if(h>23)
+    { 
+        h%=24;
+    }
+    m+=(int)(average/(60*60*60));
+
+    if(m>59)
+    {
+        h++;
+        m%=60;
+    }
+    s+=(int)(average%(60*60*60));
+
+    if(s>59)
+    {
+        m++;
+        s%=60;
+    }
+
+    if(s<0)
+    {
+        m--;
+        s+=60;
+    }
+
+    System.out.println("The synchronized clocks are:\nTime Server ---> "+h+" : "+m+" : "+s);
+    for(int i=0;i<n;i++)
+    {
+        System.out.println("Node "+(i+1)+" ---> "+nh[i]+" : "+nm[i]+" : "+ns[i]);
+    }
+}
+This method sync synchronizes the clocks of nodes with the time server. It takes the time differences array (diff[]), the number of nodes (n), the hours (h), minutes (m), and seconds (s) of the time server, as well as arrays representing hours (nh[]), minutes (nm[]), and seconds (ns[]) of each node, and the average time difference (average) as parameters.
+It adjusts the time of each node based on the average time difference, ensuring that all nodes' clocks are synchronized with the time server's clock.
+It also adjusts the time of the time server itself based on the average time difference.
+Finally, it prints out the synchronized clocks for the time server and each node.
+java
+Copy code
+public static void main(String[] args) throws IOException {
+    Berkley b = new Berkley();
+    Date date = new Date();
+    BufferedReader obj = new BufferedReader(new InputStreamReader(System.in));
+    System.out.println("Enter number of nodes:");
+    int n = Integer.parseInt(obj.readLine()); 
+    int h = date.getHours();
+    int m = date.getMinutes();
+    int s = date.getSeconds();
+    int nh[] = new int[n];
+    int nm[] = new int[n];
+    int ns[] = new int[n];
+    for(int i=0; i<n; i++)
+    {
+        System.out.println("Enter time for node "+(i+1)+"\n Hours:");
+        nh[i]=Integer.parseInt(obj.readLine());
+        System.out.println("Minutes:");
+        nm[i]=Integer.parseInt(obj.readLine());
+        System.out.println("Seconds:");
+        ns[i]=Integer.parseInt(obj.readLine());
+    }
+    for(int i=0; i<n; i++)
+    {
+        System.out.println("Time Server sent time "+h+" : "+m+" : "+s+" to node "+(i+1));
+    }
+    float diff[] = new float[n];
+    for(int i=0;i<n;i++)
+    {
+        diff[i] = b.diff(h,m,s,nh[i],nm[i],ns[i]);
+        System.out.println("Node "+(i+1)+" sent time difference of "+(int)diff[i]+" to Time Server.");
+    }
+    float average = b.average(diff,n);
+    b.sync(diff, n, h, m, s, nh, nm, ns, average);
+}
+This is the main method where the program execution starts.
+It initializes an instance of the Berkley class (b).
+It gets the current time from the system using the Date class.
+It prompts the user to enter the number of nodes and the time for each node.
+It simulates the time server sending its time to each node.
+It calculates the time differences between each node and the time server.
+It calculates the average time difference.
+It synchronizes the clocks of all nodes with the time server's clock using the sync method.
+The synchronized clocks for the time server and each node are printed out.
+This code demonstrates the Berkeley clock synchronization algorithm in Java, where the clocks of multiple nodes are synchronized with a central time server.
+
+Difference between Logical Clock and Physical Clock:
+Logical Clock: A logical clock is a concept used in distributed systems to order events that occur across different processes or nodes. It does not rely on physical time but instead assigns logical timestamps to events based on causality. Logical clocks ensure that events appear to occur in a consistent order, even if their physical timestamps are not synchronized. Examples include Lamport timestamps and Vector clocks.
+Physical Clock: A physical clock, on the other hand, represents the real-world time as measured by a clock device. Physical clocks provide timestamps based on the actual passage of time and are typically synchronized with an external time source, such as a network time protocol (NTP) server. Physical clocks are used to determine the current time and schedule time-based operations.
+Necessity of Clock Synchronization in Distributed Real-Time Systems:
+In distributed real-time systems, where multiple nodes or processes collaborate to perform time-sensitive tasks, clock synchronization is crucial for several reasons:
+Coordination: Synchronized clocks ensure that all nodes agree on the order and timing of events, enabling coordinated execution of tasks.
+Correctness: Time-dependent operations, such as scheduling tasks or handling timeouts, rely on accurate timestamps to ensure correct behavior.
+Communication: Synchronized clocks facilitate communication and message ordering between nodes, preventing inconsistencies and race conditions.
+Analysis: Accurate timestamps aid in debugging, performance analysis, and tracing of events across the distributed system.
+Principle of Berkeley Algorithm for Clock Synchronization:
+The Berkeley algorithm for clock synchronization is based on the principle of averaging the time differences between a central time server and multiple client nodes in a distributed system.
+In the Berkeley algorithm:
+Each client node periodically measures the time difference between its local clock and the time provided by the time server.
+The time differences are collected and averaged to compute the average time difference.
+Each client node adjusts its local clock based on the average time difference, aligning its clock with the time server's clock.
+Other Clock Synchronization Algorithms in Distributed Systems:
+Apart from the Berkeley algorithm, several other algorithms are used for clock synchronization in distributed systems:
+Network Time Protocol (NTP): NTP is a widely used protocol for synchronizing the clocks of computers over a network. It uses a hierarchical system of time servers to provide accurate time synchronization.
+Precision Time Protocol (PTP): PTP is a protocol used for clock synchronization in high-precision applications, such as industrial automation and financial trading. It achieves sub-microsecond accuracy by exchanging timing information between devices.
+Christian's Algorithm: Christian's algorithm is a simple algorithm for clock synchronization in which each client periodically requests the current time from a time server and adjusts its clock accordingly.
+Gaussian Synchronization: Gaussian synchronization is a statistical approach that estimates the time offset between clocks based on measured clock skew and jitter.
+Reference Broadcast Synchronization: Reference Broadcast Synchronization (RBS) is a method for synchronizing clocks in wireless sensor networks. It relies on a reference node broadcasting synchronization messages to neighboring nodes, which adjust their clocks based on the received messages.
