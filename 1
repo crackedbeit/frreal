@@ -68,3 +68,26 @@ public interface Concat extends Remote
 	public String concat(String x,String y)throws RemoteException;  
 }  
 
+Output:
+
+Terminal 1:
+preeti@ubuntu:~/Desktop/rmi$ javac *.java
+preeti@ubuntu:~/Desktop/rmi$ rmic ConcatRemote
+Warning: generation and use of skeletons and static stubs for JRMP
+is deprecated. Skeletons are unnecessary, and static stubs have
+been superseded by dynamically generated stubs. Users are
+encouraged to migrate away from using rmic to generate skeletons and static
+stubs. See the documentation for java.rmi.server.UnicastRemoteObject.
+preeti@ubuntu:~/Desktop/rmi$ rmiregistry
+
+Terminal 2:
+preeti@ubuntu:~/Desktop/rmi$ java MyServer
+
+Terminal 3:
+preeti@ubuntu:~/Desktop/rmi$ java MyClient
+Enter String 1:
+KBT
+Enter String 2:
+COE
+KBTCOE
+preeti@ubuntu:~/Desktop/rmi$
